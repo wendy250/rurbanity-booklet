@@ -1046,7 +1046,7 @@
       if(e.button !== undefined && e.button !== 0) return;
       if(e.target.isContentEditable) return; // let text editing/caret placement happen normally
       if(e.target.closest(".chip-del")) return; // let the delete button's own click fire
-      down = {x:e.clientX, y:e.clientY};
+      down = {x:e.clientX, y:e.clientY, target:e.target};
       isDragging = false;
       chip.setPointerCapture(e.pointerId);
     });
@@ -1093,7 +1093,10 @@
         endDrag();
         saveArrangement();
       } else {
-        const field = e.target.closest(".term, .note");
+        // use the pointerdown target, not pointerup's: once setPointerCapture
+        // fires, the browser retargets pointerup's e.target to `chip` itself,
+        // which made this always fall back to editing the term.
+        const field = down.target.closest(".term, .note");
         enterEdit(field || chip.querySelector(".term"));
       }
       down = null;
