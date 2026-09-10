@@ -1,0 +1,1029 @@
+<title>Rurbanity Constellations</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,680&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --paper:      #FCF2F4;
+    --card:       #F7E3E9;
+    --ink:        #33141C;
+    --ink-soft:   #7A4B57;
+    --ink-faint:  #A67885;
+    --line:       #E7C3CE;
+    --accent:     #C23768;
+    --accent-ink: #FFFFFF;
+    --accent-soft:#F5D8E2;
+    --shadow:     rgba(151,45,80,0.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:      #221016;
+      --card:       #321A24;
+      --ink:        #F7E4E9;
+      --ink-soft:   #D19FAC;
+      --ink-faint:  #8C6470;
+      --line:       #4A2530;
+      --accent:     #FF8FB3;
+      --accent-ink: #2B0E16;
+      --accent-soft: #4A253099;
+      --shadow:     rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:      #221016;
+    --card:       #321A24;
+    --ink:        #F7E4E9;
+    --ink-soft:   #D19FAC;
+    --ink-faint:  #8C6470;
+    --line:       #4A2530;
+    --accent:     #FF8FB3;
+    --accent-ink: #2B0E16;
+    --accent-soft: #4A253099;
+    --shadow:     rgba(0,0,0,0.6);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Source Serif 4', ui-serif, Georgia, serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{
+    max-width:1400px;
+    margin:0 auto;
+    padding:28px 28px 56px;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:24px;
+    flex-wrap:wrap;
+    border-bottom:1px solid var(--line);
+    padding-bottom:16px;
+    margin-bottom:22px;
+  }
+  .heading h1{
+    font-family:'Fraunces', ui-serif, serif;
+    font-weight:620;
+    font-optical-sizing:auto;
+    font-size:clamp(24px,3vw,34px);
+    letter-spacing:-0.01em;
+    margin:0 0 4px;
+    text-wrap:balance;
+  }
+  .heading p{
+    margin:0;
+    color:var(--ink-soft);
+    font-size:14.5px;
+    max-width:56ch;
+  }
+  .heading p em{ color:var(--ink); font-style:italic; }
+
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .count{
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }
+  button.reset{
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    font-size:12px;
+    letter-spacing:.02em;
+    text-transform:uppercase;
+    color:var(--accent);
+    background:transparent;
+    border:1px solid var(--accent);
+    border-radius:3px;
+    padding:8px 12px;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  button.reset:hover{ background:var(--accent); color:var(--accent-ink); }
+  button.reset:focus-visible, .chip:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  /* ---------- grid of constellations ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:18px;
+  }
+  @media (max-width:980px){
+    .grid{ grid-template-columns:repeat(2, 1fr); }
+  }
+  @media (max-width:680px){
+    .grid{ grid-template-columns:1fr; }
+    .wrap{ padding:20px 16px 48px; }
+  }
+
+  .cell{
+    position:relative;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:16px 16px 14px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-height:220px;
+  }
+  .cell.drop-hover{
+    border-color:var(--accent);
+    box-shadow:inset 0 0 0 1px var(--accent);
+  }
+
+  .cell-head{ position:relative; padding-right:44px; }
+  .numeral{
+    position:absolute;
+    top:-6px;
+    right:-4px;
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:40px;
+    line-height:1;
+    color:var(--ink);
+    opacity:.10;
+    pointer-events:none;
+    user-select:none;
+  }
+  .cell-del{
+    position:absolute;
+    top:-2px;
+    right:36px;
+    width:22px;
+    height:22px;
+    line-height:20px;
+    text-align:center;
+    padding:0;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    color:var(--ink-faint);
+    background:transparent;
+    border:1px solid transparent;
+    border-radius:50%;
+    cursor:pointer;
+  }
+  .cell-del:hover{
+    color:var(--accent-ink);
+    background:var(--accent);
+    border-color:var(--accent);
+  }
+  .cell-title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:16.5px;
+    letter-spacing:.01em;
+    margin:0 0 3px;
+  }
+  .cell-title-text{ cursor:text; }
+  .cell-title-text[contenteditable="true"]{
+    outline:1px dashed var(--accent);
+    outline-offset:2px;
+    background:var(--accent-soft);
+    border-radius:2px;
+  }
+  .cell-q{
+    font-style:italic;
+    font-size:13.5px;
+    color:var(--ink-soft);
+    margin:0 0 6px;
+    line-height:1.35;
+    cursor:text;
+  }
+  .cell-move{
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    font-size:10.5px;
+    line-height:1.5;
+    color:var(--ink-faint);
+    border-top:1px dotted var(--line);
+    padding-top:6px;
+    margin:0;
+    cursor:text;
+  }
+  .cell-q[contenteditable="true"],
+  .cell-move[contenteditable="true"]{
+    outline:1px dashed var(--accent);
+    outline-offset:2px;
+    background:var(--accent-soft);
+    border-radius:2px;
+  }
+  .cell-q:empty::before{ content:"click to add a guiding question…"; }
+  .cell-move:empty::before{ content:"click to add a movement note…"; }
+  .cell-n{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--ink-faint);
+  }
+
+  .chip-list{
+    display:flex;
+    flex-wrap:wrap;
+    align-content:flex-start;
+    gap:7px;
+    min-height:60px;
+    flex:1;
+  }
+
+  .chip{
+    display:flex;
+    align-items:flex-start;
+    gap:5px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:6px 6px 7px 9px;
+    cursor:grab;
+    touch-action:none;
+    user-select:none;
+    max-width:100%;
+  }
+  .chip:active{ cursor:grabbing; }
+  .chip-body{ min-width:0; }
+  .chip-del{
+    flex:0 0 auto;
+    width:16px;
+    height:16px;
+    line-height:14px;
+    text-align:center;
+    padding:0;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--ink-faint);
+    background:transparent;
+    border:1px solid transparent;
+    border-radius:50%;
+    cursor:pointer;
+    opacity:0;
+    transition:opacity .12s ease;
+  }
+  .chip:hover .chip-del,
+  .chip:focus-within .chip-del{ opacity:1; }
+  .chip-del:hover{
+    color:var(--accent-ink);
+    background:var(--accent);
+    border-color:var(--accent);
+  }
+  .chip-del:focus-visible{ opacity:1; outline:2px solid var(--accent); outline-offset:1px; }
+  .chip .term{
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    font-weight:500;
+    font-size:12.5px;
+    color:var(--ink);
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+  }
+  .chip .term, .chip .note{ cursor:text; }
+  .chip .note{
+    display:block;
+    font-family:'Source Serif 4', serif;
+    font-style:italic;
+    font-size:11px;
+    line-height:1.3;
+    color:var(--ink-soft);
+    margin-top:2px;
+    max-width:23ch;
+  }
+  .chip .term[contenteditable="true"],
+  .chip .note[contenteditable="true"]{
+    outline:1px dashed var(--accent);
+    outline-offset:2px;
+    background:var(--accent-soft);
+    border-radius:2px;
+  }
+  .chip.dragging{
+    position:fixed;
+    z-index:50;
+    pointer-events:none;
+    box-shadow:0 10px 24px var(--shadow);
+    border-color:var(--accent);
+    transform:rotate(-1.2deg);
+    opacity:.97;
+  }
+  .chip-ghost{
+    border:1.5px dashed var(--accent);
+    border-radius:4px;
+    background:var(--accent-soft);
+    opacity:.7;
+  }
+
+  .add-term{
+    background:transparent;
+    border:1px dashed var(--line);
+    border-radius:4px;
+    padding:6px 10px 7px;
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    font-size:12px;
+    color:var(--ink-faint);
+    cursor:pointer;
+  }
+  .add-term:hover{ border-color:var(--accent); color:var(--accent); }
+  .add-term-input{
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    font-size:12.5px;
+    padding:5px 8px;
+    border:1px solid var(--accent);
+    border-radius:4px;
+    background:var(--paper);
+    color:var(--ink);
+    outline:none;
+    width:150px;
+    max-width:100%;
+  }
+
+  .add-cell{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:220px;
+    border:1.5px dashed var(--line);
+    border-radius:6px;
+    background:transparent;
+    color:var(--ink-faint);
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    font-size:13px;
+    letter-spacing:.02em;
+    cursor:pointer;
+  }
+  .add-cell:hover{ border-color:var(--accent); color:var(--accent); }
+  .add-cell:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  footer{
+    margin-top:26px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-faint);
+    border-top:1px solid var(--line);
+    padding-top:12px;
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="heading">
+      <h1>Rurbanity Constellations</h1>
+      <p>The 50 glossary terms from GPT's structural proposal, grouped into its six candidate constellations. <em>Drag a term to move it, click any text to edit it, use “+ add term” or “+ Add constellation” to create new ones, or hover a term / a constellation's corner for × to delete it</em> — changes save automatically in this browser.</p>
+    </div>
+    <div class="controls">
+      <span class="count" id="totalCount"></span>
+      <button class="reset" id="resetBtn" type="button">Reset to proposed order</button>
+    </div>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>Source: “Proposal made by gpt(1).pdf” — six-part structure for the Glossary of Rurbanity.</footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  function toRoman(num){
+    const vals = [[1000,"M"],[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],
+      [50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]];
+    let res = "";
+    vals.forEach(([v,s])=>{ while(num>=v){ res+=s; num-=v; } });
+    return res;
+  }
+
+  const SECTIONS = [
+    {
+      id:1, title:"Inherited Grounds",
+      q:"What was already there before urbanization arrived?",
+      move:"ground → cultivated parcel → fragmented land → commons → tenure → settlement → agrarian town → remembered productive landscape",
+      terms:[
+        {t:"Bàzi", p:9, n:"opens on a territory where mountains, water, farmland, villages and urban development already coexist"},
+        {t:"Wadi", p:47},
+        {t:"Minifúndios", p:4},
+        {t:"Gomala", p:24},
+        {t:"Ejido", p:23},
+        {t:"Idd", p:48},
+        {t:"Ackerbürgerstadt", p:1},
+        {t:"Chacras", p:12, n:"the name survives while suburbanization erases the productive landscape it once described"}
+      ]
+    },
+    {
+      id:2, title:"Drawing the Line",
+      q:"Who decides what counts as urban, rural, inside, outside, or even visible?",
+      move:"boundary → regulation → classification → mismatch → ambiguity → invisibility",
+      terms:[
+        {t:"al Hayyiz al ʿUmrānī", p:7, n:"a settlement zone / urban growth boundary — applies to rural settlements too, not only cities"},
+        {t:"Lal Lakeer / Lal Dora", p:28},
+        {t:"Wildland-urban interface", p:50},
+        {t:"Ektós Schedíou", p:22},
+        {t:"Janganana Nagar", p:15, n:"urban by census criteria, still governed as rural"},
+        {t:"Mazafati Ilaqa", p:30},
+        {t:"Bilanam zameen", p:10, n:"literally “unnamed land” — classification decides whether land can be governed, taxed, protected"},
+        {t:"Ghayr Maḥsūb / Unaccounted", p:46, n:"“not counted”"}
+      ]
+    },
+    {
+      id:3, title:"Making Urban",
+      q:"Through what actions does land become urban?",
+      move:"a succession of operations, not a noun",
+      terms:[
+        {t:"Tengtui", p:39, n:"clears"},
+        {t:"Bhorat", p:3, n:"remakes the ground"},
+        {t:"nóngdì zhòng gōngchǎng", p:32, n:"changes productive use"},
+        {t:"Zënia", p:43, n:"incrementally occupies"},
+        {t:"Party Plots", p:34, n:"speculate"},
+        {t:"Desa rasa kota", p:20, n:"absorbs villages into private urbanization"},
+        {t:"Sindosi", p:49, n:"produces the new city"},
+        {t:"Invasión vertical", p:25, n:"intensifies vertically"},
+        {t:"Cheloveynik", p:14, n:"pushes that intensification to an extreme"}
+      ]
+    },
+    {
+      id:4, title:"Flows and Corridors",
+      q:"What connects places that appear to belong to separate rural and urban worlds?",
+      move:"a cinematic zoom — one body, then global circulation",
+      terms:[
+        {t:"Pinguela", p:44, n:"one body crosses"},
+        {t:"Adda", p:5, n:"bodies gather"},
+        {t:"Kibanda", p:27, n:"movement becomes exchange"},
+        {t:"Tarāḥīl", p:8, n:"labour circulates"},
+        {t:"Multilokalität", p:31, n:"inhabitation becomes distributed across places"},
+        {t:"Linhão", p:29, n:"infrastructure becomes territory"},
+        {t:"Durana", p:21, n:"the corridor organizes a metropolitan region"},
+        {t:"Nyawit", p:33, n:"production connects to global commodity circulation"}
+      ]
+    },
+    {
+      id:5, title:"Living the Interface",
+      q:"How are these territories already being lived and made through everyday practice?",
+      move:"knowing → dwelling → exchanging → cooperating → producing → cultivating → sharing → settling → designing",
+      terms:[
+        {t:"Tras lomita", p:45},
+        {t:"Chalupaření", p:13, n:"inhabitation traverses urban and rural worlds — alternative domesticity in rural cottages"},
+        {t:"Warung Tembok Bolong", p:42},
+        {t:"Tequitl", p:40},
+        {t:"Qián diàn hòu chǎng", p:16, n:"the rural household becomes productive infrastructure — commerce out front, production behind"},
+        {t:"Chengjiao Tianyuan", p:17},
+        {t:"Potrero", p:37},
+        {t:"Asentamiento", p:35},
+        {t:"Landwirtschaftspark", p:6, n:"coexistence as an intentional design proposition"}
+      ]
+    },
+    {
+      id:6, title:"Beyond the Edge",
+      q:"What if rurbanity is not an edge at all, but a condition of territory?",
+      move:"hinge terms, then increasingly territorial: post-rural → Stadtland → città di pianura → città diffusa → urbanização extensiva",
+      terms:[
+        {t:"Ābādī", p:2, n:"asks how territory becomes inhabitable, not where urbanity starts"},
+        {t:"Janapada", p:26, n:"questions center and periphery"},
+        {t:"Čardak ni na nebu ni na zemlji", p:11, n:"literally “neither in the sky nor on the ground”"},
+        {t:"Post rural", p:36},
+        {t:"Stadtland", p:38, n:"the boundary as a spatial field, not a line"},
+        {t:"Città di Pianura", p:19},
+        {t:"Città Diffusa", p:18},
+        {t:"Urbanização Extensiva", p:41, n:"abandons the edge altogether — city, periphery and hinterland all destabilized"}
+      ]
+    }
+  ];
+
+  function slug(s){
+    return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
+      .replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+  }
+
+  // flat lookup: id -> {t,n,homeSection}
+  function buildTermsIndex(){
+    const terms = {};
+    SECTIONS.forEach(sec=>{
+      sec.terms.forEach(term=>{
+        const id = slug(term.t);
+        terms[id] = Object.assign({}, term, {id, home:sec.id});
+      });
+    });
+    return terms;
+  }
+  let TERMS = buildTermsIndex();
+
+  const STORAGE_KEY = "rurbanity-constellations-v1";
+  const EDITS_KEY = "rurbanity-constellations-edits-v1";
+  const CUSTOM_KEY = "rurbanity-constellations-custom-v1";
+  const EXTRA_KEY = "rurbanity-constellations-extra-sections-v1";
+
+  let CUSTOM_TERMS = {};
+  function loadCustomTerms(){
+    try{ CUSTOM_TERMS = JSON.parse(localStorage.getItem(CUSTOM_KEY) || "{}"); }
+    catch(e){ CUSTOM_TERMS = {}; }
+  }
+  function saveCustomTerms(){
+    try{ localStorage.setItem(CUSTOM_KEY, JSON.stringify(CUSTOM_TERMS)); }catch(e){}
+  }
+  function applyCustomTerms(){
+    Object.keys(CUSTOM_TERMS).forEach(id=>{
+      if(!TERMS[id]) TERMS[id] = Object.assign({id}, CUSTOM_TERMS[id]);
+    });
+  }
+  function uniqueTermId(text){
+    const base = slug(text) || "term";
+    let id = base, i = 2;
+    while(TERMS[id]){ id = base + "-" + i; i++; }
+    return id;
+  }
+
+  let EXTRA_SECTIONS = [];
+  function loadExtraSections(){
+    try{ EXTRA_SECTIONS = JSON.parse(localStorage.getItem(EXTRA_KEY) || "[]"); }
+    catch(e){ EXTRA_SECTIONS = []; }
+  }
+  function saveExtraSections(){
+    try{ localStorage.setItem(EXTRA_KEY, JSON.stringify(EXTRA_SECTIONS)); }catch(e){}
+  }
+  function allSections(){ return SECTIONS.concat(EXTRA_SECTIONS); }
+  function nextSectionId(){
+    return allSections().reduce((m,s)=>Math.max(m,s.id), 0) + 1;
+  }
+
+  let EDITS = {};
+  function loadEdits(){
+    try{ EDITS = JSON.parse(localStorage.getItem(EDITS_KEY) || "{}"); }
+    catch(e){ EDITS = {}; }
+  }
+  function applyEdits(){
+    Object.keys(EDITS).forEach(id=>{
+      if(TERMS[id]) Object.assign(TERMS[id], EDITS[id]);
+    });
+  }
+  function saveEdit(id, field, value){
+    if(!EDITS[id]) EDITS[id] = {};
+    EDITS[id][field] = value;
+    try{ localStorage.setItem(EDITS_KEY, JSON.stringify(EDITS)); }catch(e){}
+    if(TERMS[id]) TERMS[id][field] = value;
+  }
+
+  const SECTIONS_KEY = "rurbanity-constellations-sections-v1";
+  let SECTION_STATE = {};
+  function loadSectionState(){
+    try{ SECTION_STATE = JSON.parse(localStorage.getItem(SECTIONS_KEY) || "{}"); }
+    catch(e){ SECTION_STATE = {}; }
+  }
+  function saveSectionState(){
+    try{ localStorage.setItem(SECTIONS_KEY, JSON.stringify(SECTION_STATE)); }catch(e){}
+  }
+  function sectionField(sec, field){
+    const s = SECTION_STATE[sec.id];
+    return (s && typeof s[field] === "string") ? s[field] : sec[field];
+  }
+  function sectionTitle(sec){ return sectionField(sec, "title"); }
+  function sectionDeleted(sec){
+    const s = SECTION_STATE[sec.id];
+    return !!(s && s.deleted);
+  }
+
+  function defaultArrangement(){
+    const arr = {};
+    SECTIONS.forEach(sec=>{ arr[sec.id] = sec.terms.map(t=>slug(t.t)); });
+    return arr;
+  }
+
+  function loadArrangement(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return defaultArrangement();
+      const parsed = JSON.parse(raw);
+      const flat = Object.values(parsed).flat();
+      if(!flat.every(id=>TERMS[id])) return defaultArrangement();
+      return parsed;
+    }catch(e){ return defaultArrangement(); }
+  }
+
+  function saveArrangement(){
+    const arr = {};
+    document.querySelectorAll(".cell").forEach(cell=>{
+      const sid = cell.dataset.section;
+      arr[sid] = [...cell.querySelectorAll(".chip-list > .chip")].map(c=>c.dataset.id);
+    });
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }catch(e){}
+    updateCounts();
+  }
+
+  function updateCounts(){
+    let total = 0;
+    document.querySelectorAll(".cell").forEach(cell=>{
+      const n = cell.querySelectorAll(".chip-list > .chip").length;
+      cell.querySelector(".cell-n").textContent = n + (n===1 ? " term" : " terms");
+      total += n;
+    });
+    document.getElementById("totalCount").textContent = total + " terms total";
+  }
+
+  function makeChip(id){
+    const term = TERMS[id];
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.dataset.id = id;
+    chip.tabIndex = 0;
+
+    const body = document.createElement("div");
+    body.className = "chip-body";
+
+    const termEl = document.createElement("span");
+    termEl.className = "term";
+    termEl.dataset.field = "t";
+    termEl.textContent = term.t;
+    body.appendChild(termEl);
+
+    if(term.n){
+      const noteEl = document.createElement("span");
+      noteEl.className = "note";
+      noteEl.dataset.field = "n";
+      noteEl.textContent = term.n;
+      body.appendChild(noteEl);
+    }
+    chip.appendChild(body);
+
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "chip-del";
+    delBtn.title = "Delete this term";
+    delBtn.setAttribute("aria-label", "Delete " + term.t);
+    delBtn.textContent = "×";
+    delBtn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      chip.remove();
+      if(CUSTOM_TERMS[id]){ delete CUSTOM_TERMS[id]; saveCustomTerms(); }
+      saveArrangement();
+    });
+    chip.appendChild(delBtn);
+
+    attachDrag(chip);
+    return chip;
+  }
+
+  function enterEdit(el){
+    if(!el) return;
+    const chip = el.closest(".chip");
+    const id = chip.dataset.id;
+    const field = el.dataset.field;
+    const original = el.textContent;
+
+    el.contentEditable = "true";
+    el.spellcheck = false;
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    function onKey(e){
+      e.stopPropagation();
+      if(e.key === "Enter"){ e.preventDefault(); el.blur(); }
+      else if(e.key === "Escape"){ el.textContent = original; el.blur(); }
+    }
+    function commit(){
+      el.removeEventListener("keydown", onKey);
+      el.contentEditable = "false";
+      let text = el.textContent.replace(/\s+/g, " ").trim();
+      if(text === "") text = original;
+      el.textContent = text;
+      if(text !== original) saveEdit(id, field, text);
+    }
+    el.addEventListener("keydown", onKey);
+    el.addEventListener("blur", commit, {once:true});
+  }
+
+  function editSectionField(el, sectionId, field){
+    const original = el.textContent;
+    el.contentEditable = "true";
+    el.spellcheck = false;
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    function onKey(e){
+      e.stopPropagation();
+      if(e.key === "Enter"){ e.preventDefault(); el.blur(); }
+      else if(e.key === "Escape"){ el.textContent = original; el.blur(); }
+    }
+    function commit(){
+      el.removeEventListener("keydown", onKey);
+      el.contentEditable = "false";
+      let text = el.textContent.replace(/\s+/g, " ").trim();
+      if(text === "") text = original;
+      el.textContent = text;
+      if(text !== original){
+        if(!SECTION_STATE[sectionId]) SECTION_STATE[sectionId] = {};
+        SECTION_STATE[sectionId][field] = text;
+        saveSectionState();
+      }
+    }
+    el.addEventListener("keydown", onKey);
+    el.addEventListener("blur", commit, {once:true});
+  }
+
+  function buildGrid(arrangement){
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
+    allSections().forEach(sec=>{
+      if(sectionDeleted(sec)) return;
+
+      const cell = document.createElement("section");
+      cell.className = "cell";
+      cell.dataset.section = sec.id;
+
+      const head = document.createElement("div");
+      head.className = "cell-head";
+
+      const numeral = document.createElement("div");
+      numeral.className = "numeral";
+      numeral.textContent = toRoman(sec.id);
+      head.appendChild(numeral);
+
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "cell-del";
+      delBtn.title = "Delete this constellation";
+      delBtn.setAttribute("aria-label", "Delete this constellation");
+      delBtn.textContent = "×";
+      delBtn.addEventListener("click", ()=>{
+        const n = cell.querySelectorAll(".chip-list > .chip").length;
+        const msg = n
+          ? 'Delete “' + sectionTitle(sec) + '”? Its ' + n + (n===1?' term':' terms') + ' will be removed from the board until you reset.'
+          : 'Delete “' + sectionTitle(sec) + '”?';
+        if(!window.confirm(msg)) return;
+        if(!SECTION_STATE[sec.id]) SECTION_STATE[sec.id] = {};
+        SECTION_STATE[sec.id].deleted = true;
+        saveSectionState();
+        cell.remove();
+        saveArrangement();
+      });
+      head.appendChild(delBtn);
+
+      const titleWrap = document.createElement("h2");
+      titleWrap.className = "cell-title";
+      const numPrefix = document.createElement("span");
+      numPrefix.className = "cell-title-prefix";
+      numPrefix.textContent = toRoman(sec.id) + ". ";
+      titleWrap.appendChild(numPrefix);
+      const titleText = document.createElement("span");
+      titleText.className = "cell-title-text";
+      titleText.textContent = sectionTitle(sec);
+      titleText.tabIndex = 0;
+      titleText.addEventListener("click", ()=>editSectionField(titleText, sec.id, "title"));
+      titleWrap.appendChild(titleText);
+      head.appendChild(titleWrap);
+
+      const q = document.createElement("p");
+      q.className = "cell-q";
+      q.textContent = sectionField(sec, "q");
+      q.tabIndex = 0;
+      q.addEventListener("click", ()=>editSectionField(q, sec.id, "q"));
+      head.appendChild(q);
+
+      const move = document.createElement("p");
+      move.className = "cell-move";
+      move.textContent = sectionField(sec, "move");
+      move.tabIndex = 0;
+      move.addEventListener("click", ()=>editSectionField(move, sec.id, "move"));
+      head.appendChild(move);
+
+      const n = document.createElement("p");
+      n.className = "cell-n";
+      head.appendChild(n);
+
+      cell.appendChild(head);
+
+      const list = document.createElement("div");
+      list.className = "chip-list";
+      (arrangement[sec.id] || []).forEach(id=>{
+        if(TERMS[id]) list.appendChild(makeChip(id));
+      });
+      list.appendChild(makeAddTermControl(list));
+      cell.appendChild(list);
+
+      grid.appendChild(cell);
+    });
+
+    const addCell = document.createElement("button");
+    addCell.type = "button";
+    addCell.className = "add-cell";
+    addCell.textContent = "+ Add constellation";
+    addCell.addEventListener("click", ()=>{
+      const id = nextSectionId();
+      EXTRA_SECTIONS.push({id, title:"New Constellation", q:"", move:""});
+      saveExtraSections();
+      buildGrid(loadArrangement());
+      requestAnimationFrame(()=>{
+        const titleEl = document.querySelector('.cell[data-section="' + id + '"] .cell-title-text');
+        if(titleEl) editSectionField(titleEl, id, "title");
+      });
+    });
+    grid.appendChild(addCell);
+
+    updateCounts();
+  }
+
+  function makeAddTermControl(list){
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "add-term";
+    addBtn.textContent = "+ add term";
+
+    function showInput(){
+      const wrap = document.createElement("div");
+      wrap.className = "add-term-input-wrap";
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "add-term-input";
+      input.placeholder = "term name";
+      wrap.appendChild(input);
+      list.insertBefore(wrap, addBtn);
+      addBtn.style.display = "none";
+      input.focus();
+
+      let done = false;
+      function finish(commit){
+        if(done) return;
+        done = true;
+        const text = input.value.replace(/\s+/g, " ").trim();
+        if(commit && text){
+          const id = uniqueTermId(text);
+          TERMS[id] = {id, t:text};
+          CUSTOM_TERMS[id] = {t:text};
+          saveCustomTerms();
+          list.insertBefore(makeChip(id), wrap);
+          saveArrangement();
+        }
+        wrap.remove();
+        addBtn.style.display = "";
+      }
+      input.addEventListener("keydown", (e)=>{
+        if(e.key === "Enter"){ e.preventDefault(); finish(true); }
+        else if(e.key === "Escape"){ e.preventDefault(); finish(false); }
+      });
+      input.addEventListener("blur", ()=>finish(true));
+    }
+
+    addBtn.addEventListener("click", showInput);
+    return addBtn;
+  }
+
+  /* ---------- drag & drop (pointer events) ---------- */
+
+  function getInsertTarget(container, x, y){
+    const chips = [...container.querySelectorAll(".chip:not(.dragging)")];
+    let best = null, bestDist = Infinity, after = false;
+    chips.forEach(el=>{
+      const r = el.getBoundingClientRect();
+      const cx = r.left + r.width/2, cy = r.top + r.height/2;
+      const d = Math.hypot(x-cx, y-cy);
+      if(d < bestDist){ bestDist = d; best = el; after = x > cx; }
+    });
+    if(!best) return null;
+    return after ? best.nextElementSibling : best;
+  }
+
+  function attachDrag(chip){
+    const THRESHOLD = 6;
+    let ghost = null, offX = 0, offY = 0, startList = null;
+    let down = null, isDragging = false;
+
+    function startDragging(){
+      isDragging = true;
+      const r = chip.getBoundingClientRect();
+      offX = down.x - r.left;
+      offY = down.y - r.top;
+      startList = chip.parentElement;
+
+      ghost = document.createElement("div");
+      ghost.className = "chip chip-ghost";
+      ghost.style.width = r.width + "px";
+      ghost.style.height = r.height + "px";
+      startList.insertBefore(ghost, chip.nextSibling);
+
+      chip.classList.add("dragging");
+      chip.style.width = r.width + "px";
+      chip.style.left = r.left + "px";
+      chip.style.top = r.top + "px";
+    }
+
+    chip.addEventListener("pointerdown", (e)=>{
+      if(e.button !== undefined && e.button !== 0) return;
+      if(e.target.isContentEditable) return; // let text editing/caret placement happen normally
+      if(e.target.closest(".chip-del")) return; // let the delete button's own click fire
+      down = {x:e.clientX, y:e.clientY};
+      isDragging = false;
+      chip.setPointerCapture(e.pointerId);
+    });
+
+    chip.addEventListener("pointermove", (e)=>{
+      if(!down) return;
+      if(!isDragging){
+        const dist = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+        if(dist < THRESHOLD) return;
+        startDragging();
+      }
+      chip.style.left = (e.clientX - offX) + "px";
+      chip.style.top = (e.clientY - offY) + "px";
+
+      const under = document.elementFromPoint(e.clientX, e.clientY);
+      const cell = under ? under.closest(".cell") : null;
+      document.querySelectorAll(".cell.drop-hover").forEach(c=>{ if(c!==cell) c.classList.remove("drop-hover"); });
+      if(!cell) return;
+      cell.classList.add("drop-hover");
+      const list = cell.querySelector(".chip-list");
+      const target = getInsertTarget(list, e.clientX, e.clientY);
+      if(target === ghost) return;
+      list.insertBefore(ghost, target);
+    });
+
+    function endDrag(){
+      chip.classList.remove("dragging");
+      chip.style.position = "";
+      chip.style.left = "";
+      chip.style.top = "";
+      chip.style.width = "";
+      document.querySelectorAll(".cell.drop-hover").forEach(c=>c.classList.remove("drop-hover"));
+      if(ghost && ghost.parentElement){
+        ghost.parentElement.insertBefore(chip, ghost);
+        ghost.remove();
+      }
+      ghost = null;
+    }
+
+    function finish(e){
+      if(!down) return;
+      try{ chip.releasePointerCapture(e.pointerId); }catch(err){}
+      if(isDragging){
+        endDrag();
+        saveArrangement();
+      } else {
+        const field = e.target.closest(".term, .note");
+        enterEdit(field || chip.querySelector(".term"));
+      }
+      down = null;
+      isDragging = false;
+    }
+
+    chip.addEventListener("pointerup", finish);
+    chip.addEventListener("pointercancel", (e)=>{
+      if(isDragging) endDrag();
+      down = null;
+      isDragging = false;
+    });
+
+    // basic keyboard support: arrow keys move a focused chip to the next/previous constellation
+    chip.addEventListener("keydown", (e)=>{
+      if(e.target.isContentEditable) return; // don't hijack arrow keys while typing
+      if(e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      const cells = [...document.querySelectorAll(".cell")];
+      const currentCell = chip.closest(".cell");
+      const idx = cells.indexOf(currentCell);
+      const nextIdx = e.key === "ArrowRight" ? Math.min(idx+1, cells.length-1) : Math.max(idx-1, 0);
+      if(nextIdx === idx) return;
+      const targetList = cells[nextIdx].querySelector(".chip-list");
+      const addCtrl = targetList.querySelector(".add-term, .add-term-input-wrap");
+      targetList.insertBefore(chip, addCtrl || null);
+      chip.focus();
+      saveArrangement();
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", ()=>{
+    try{
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(EDITS_KEY);
+      localStorage.removeItem(SECTIONS_KEY);
+      localStorage.removeItem(CUSTOM_KEY);
+      localStorage.removeItem(EXTRA_KEY);
+    }catch(e){}
+    EDITS = {};
+    SECTION_STATE = {};
+    CUSTOM_TERMS = {};
+    EXTRA_SECTIONS = [];
+    TERMS = buildTermsIndex();
+    buildGrid(defaultArrangement());
+  });
+
+  loadEdits();
+  applyEdits();
+  loadSectionState();
+  loadExtraSections();
+  loadCustomTerms();
+  applyCustomTerms();
+  buildGrid(loadArrangement());
+})();
+</script>
