@@ -1138,8 +1138,10 @@
   function captureBoardBlob(){
     return html2canvas(document.querySelector(".wrap"), {
       backgroundColor: getComputedStyle(document.body).backgroundColor,
-      scale: Math.min(2, window.devicePixelRatio || 1)
-    }).then((canvas)=>new Promise((resolve)=>canvas.toBlob(resolve, "image/png")));
+      scale: Math.max(3, window.devicePixelRatio || 1),
+      useCORS: true,
+      imageTimeout: 0
+    }).then((canvas)=>new Promise((resolve)=>canvas.toBlob(resolve, "image/png", 1)));
   }
 
   // Saves via the artifact viewer's downloads capability when available
