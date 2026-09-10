@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Rurbanity Constellations</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,680&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
@@ -86,7 +87,8 @@
   .controls{
     display:flex;
     align-items:center;
-    gap:14px;
+    flex-wrap:wrap;
+    gap:10px 14px;
   }
   .count{
     font-family:'IBM Plex Mono', ui-monospace, monospace;
@@ -291,6 +293,7 @@
     background:var(--accent-soft);
     border-radius:2px;
   }
+  .chip .note:empty::before{ content:"add a note…"; }
   .chip.dragging{
     position:fixed;
     z-index:50;
@@ -318,18 +321,29 @@
     cursor:pointer;
   }
   .add-term:hover{ border-color:var(--accent); color:var(--accent); }
-  .add-term-input{
-    font-family:'IBM Plex Mono', ui-monospace, monospace;
-    font-size:12.5px;
-    padding:5px 8px;
+  .add-term-input-wrap{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    background:var(--paper);
     border:1px solid var(--accent);
     border-radius:4px;
-    background:var(--paper);
+    padding:6px 8px 7px;
+  }
+  .add-term-input, .add-term-note-input{
+    font-size:12.5px;
+    padding:2px 0;
+    border:none;
+    border-bottom:1px dotted var(--line);
+    background:transparent;
     color:var(--ink);
     outline:none;
-    width:150px;
+    width:160px;
     max-width:100%;
   }
+  .add-term-input{ font-family:'IBM Plex Mono', ui-monospace, monospace; font-weight:500; }
+  .add-term-note-input{ font-family:'Source Serif 4', serif; font-style:italic; color:var(--ink-soft); border-bottom:none; }
+  .add-term-input:focus, .add-term-note-input:focus{ border-bottom-color:var(--accent); }
 
   .add-cell{
     display:flex;
@@ -347,6 +361,89 @@
   }
   .add-cell:hover{ border-color:var(--accent); color:var(--accent); }
   .add-cell:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* ---------- email modal ---------- */
+  .modal-backdrop{
+    position:fixed;
+    inset:0;
+    background:rgba(20,6,12,0.4);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:100;
+  }
+  .modal-backdrop[hidden]{ display:none; }
+  .modal{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:22px;
+    max-width:400px;
+    width:100%;
+    box-shadow:0 24px 60px var(--shadow);
+  }
+  .modal h3{
+    font-family:'Fraunces', serif;
+    font-weight:620;
+    font-size:18px;
+    margin:0 0 10px;
+  }
+  .modal-note{
+    font-size:12.5px;
+    line-height:1.5;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+  }
+  .modal-note strong{ color:var(--ink); }
+  .modal-label{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--ink-faint);
+    margin-bottom:5px;
+  }
+  .modal-input{
+    display:block;
+    width:100%;
+    font-family:'Source Serif 4', serif;
+    font-size:14px;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    background:var(--card);
+    color:var(--ink);
+    outline:none;
+    margin-bottom:16px;
+  }
+  .modal-input:focus{ border-color:var(--accent); }
+  .modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+  }
+  .modal-cancel, .modal-send{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:.02em;
+    padding:8px 14px;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .modal-cancel{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+  }
+  .modal-cancel:hover{ border-color:var(--ink-soft); }
+  .modal-send{
+    background:var(--accent);
+    border:1px solid var(--accent);
+    color:var(--accent-ink);
+  }
+  .modal-send:hover{ opacity:.9; }
 
   footer{
     margin-top:26px;
@@ -367,6 +464,8 @@
     </div>
     <div class="controls">
       <span class="count" id="totalCount"></span>
+      <button class="reset" id="saveImageBtn" type="button">Save as image</button>
+      <button class="reset" id="emailBtn" type="button">Email to…</button>
       <button class="reset" id="resetBtn" type="button">Reset to proposed order</button>
     </div>
   </header>
@@ -377,6 +476,20 @@
 
 </div>
 
+<div class="modal-backdrop" id="emailModalBackdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="emailModalTitle">
+    <h3 id="emailModalTitle">Send board image by email</h3>
+    <p class="modal-note">This saves a PNG of the current arrangement to your computer, then opens Gmail compose with the recipient filled in. Attach the downloaded PNG there before sending — browsers can't attach files automatically. Sends from whichever Google account is signed in (use <strong>wendylovesonion@gmail.com</strong>).</p>
+    <label class="modal-label" for="emailModalInput">Recipient email</label>
+    <input type="email" id="emailModalInput" class="modal-input" placeholder="name@example.com" autocomplete="off">
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel" id="emailModalCancel">Cancel</button>
+      <button type="button" class="modal-send" id="emailModalSend">Save image &amp; open Gmail</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 (function(){
   "use strict";
@@ -629,13 +742,12 @@
     termEl.textContent = term.t;
     body.appendChild(termEl);
 
-    if(term.n){
-      const noteEl = document.createElement("span");
-      noteEl.className = "note";
-      noteEl.dataset.field = "n";
-      noteEl.textContent = term.n;
-      body.appendChild(noteEl);
-    }
+    const noteEl = document.createElement("span");
+    noteEl.className = "note";
+    noteEl.dataset.field = "n";
+    noteEl.tabIndex = 0;
+    noteEl.textContent = term.n || "";
+    body.appendChild(noteEl);
     chip.appendChild(body);
 
     const delBtn = document.createElement("button");
@@ -681,7 +793,7 @@
       el.removeEventListener("keydown", onKey);
       el.contentEditable = "false";
       let text = el.textContent.replace(/\s+/g, " ").trim();
-      if(text === "") text = original;
+      if(field === "t" && text === "") text = original; // a term always needs a name; a note may be cleared
       el.textContent = text;
       if(text !== original) saveEdit(id, field, text);
     }
@@ -825,24 +937,30 @@
     function showInput(){
       const wrap = document.createElement("div");
       wrap.className = "add-term-input-wrap";
-      const input = document.createElement("input");
-      input.type = "text";
-      input.className = "add-term-input";
-      input.placeholder = "term name";
-      wrap.appendChild(input);
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.className = "add-term-input";
+      nameInput.placeholder = "term name";
+      const noteInput = document.createElement("input");
+      noteInput.type = "text";
+      noteInput.className = "add-term-note-input";
+      noteInput.placeholder = "short note (optional)";
+      wrap.appendChild(nameInput);
+      wrap.appendChild(noteInput);
       list.insertBefore(wrap, addBtn);
       addBtn.style.display = "none";
-      input.focus();
+      nameInput.focus();
 
       let done = false;
       function finish(commit){
         if(done) return;
         done = true;
-        const text = input.value.replace(/\s+/g, " ").trim();
+        const text = nameInput.value.replace(/\s+/g, " ").trim();
+        const note = noteInput.value.replace(/\s+/g, " ").trim();
         if(commit && text){
           const id = uniqueTermId(text);
-          TERMS[id] = {id, t:text};
-          CUSTOM_TERMS[id] = {t:text};
+          TERMS[id] = note ? {id, t:text, n:note} : {id, t:text};
+          CUSTOM_TERMS[id] = note ? {t:text, n:note} : {t:text};
           saveCustomTerms();
           list.insertBefore(makeChip(id), wrap);
           saveArrangement();
@@ -850,11 +968,19 @@
         wrap.remove();
         addBtn.style.display = "";
       }
-      input.addEventListener("keydown", (e)=>{
+      nameInput.addEventListener("keydown", (e)=>{
+        if(e.key === "Enter"){ e.preventDefault(); noteInput.focus(); }
+        else if(e.key === "Escape"){ e.preventDefault(); finish(false); }
+      });
+      noteInput.addEventListener("keydown", (e)=>{
         if(e.key === "Enter"){ e.preventDefault(); finish(true); }
         else if(e.key === "Escape"){ e.preventDefault(); finish(false); }
       });
-      input.addEventListener("blur", ()=>finish(true));
+      wrap.addEventListener("focusout", ()=>{
+        requestAnimationFrame(()=>{
+          if(!wrap.contains(document.activeElement)) finish(true);
+        });
+      });
     }
 
     addBtn.addEventListener("click", showInput);
@@ -1006,5 +1132,116 @@
   loadCustomTerms();
   applyCustomTerms();
   buildGrid(loadArrangement());
+
+  /* ---------- export: save as image / email ---------- */
+
+  function captureBoardBlob(){
+    return html2canvas(document.querySelector(".wrap"), {
+      backgroundColor: getComputedStyle(document.body).backgroundColor,
+      scale: Math.min(2, window.devicePixelRatio || 1)
+    }).then((canvas)=>new Promise((resolve)=>canvas.toBlob(resolve, "image/png")));
+  }
+
+  // Saves via the artifact viewer's downloads capability when available
+  // (shows the viewer a confirmation dialog); otherwise falls back to a
+  // plain anchor download, which is what runs when this file is opened
+  // standalone (double-clicked, or served from GitHub Pages).
+  async function saveFile(blob, filename){
+    if(window.claude && typeof window.claude.use === "function"){
+      try{
+        const downloads = await window.claude.use("downloads");
+        if(downloads){
+          await downloads.save({filename, data: blob});
+          return {ok:true};
+        }
+      }catch(err){
+        if(err && err.code === "declined") return {ok:false, declined:true};
+        // any other capability error: fall through to the anchor download below
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    return {ok:true};
+  }
+
+  function withBusyLabel(btn, busyText, run){
+    const label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = busyText;
+    return run().then((outcome)=>{
+      btn.textContent = (outcome && outcome.declined) ? "Not saved" : label;
+      return outcome;
+    }).catch(()=>{
+      btn.textContent = "Couldn't save";
+    }).finally(()=>{
+      setTimeout(()=>{ btn.disabled = false; btn.textContent = label; }, 1200);
+    });
+  }
+
+  const saveImageBtn = document.getElementById("saveImageBtn");
+  if(saveImageBtn){
+    saveImageBtn.addEventListener("click", ()=>{
+      withBusyLabel(saveImageBtn, "Rendering…", async ()=>{
+        const blob = await captureBoardBlob();
+        return saveFile(blob, "rurbanity-constellations.png");
+      });
+    });
+  }
+
+  const emailBtn = document.getElementById("emailBtn");
+  const emailBackdrop = document.getElementById("emailModalBackdrop");
+  const emailInput = document.getElementById("emailModalInput");
+  const emailSend = document.getElementById("emailModalSend");
+  const emailCancel = document.getElementById("emailModalCancel");
+
+  function openEmailModal(){
+    emailBackdrop.hidden = false;
+    emailInput.value = "";
+    emailInput.style.borderColor = "";
+    requestAnimationFrame(()=>emailInput.focus());
+  }
+  function closeEmailModal(){ emailBackdrop.hidden = true; }
+
+  function sendEmailFlow(){
+    const recipient = emailInput.value.trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)){
+      emailInput.style.borderColor = "var(--accent)";
+      emailInput.focus();
+      return;
+    }
+    withBusyLabel(emailSend, "Rendering…", async ()=>{
+      const blob = await captureBoardBlob();
+      const outcome = await saveFile(blob, "rurbanity-constellations.png");
+      if(!outcome.declined){
+        const su = encodeURIComponent("Rurbanity Constellations board");
+        const body = encodeURIComponent(
+          "Hi,\n\nSharing the current arrangement of the Rurbanity Constellations board.\n\n" +
+          "A file named rurbanity-constellations.png just saved to your computer — please attach it below before sending.\n\n"
+        );
+        const gmailUrl = "https://mail.google.com/mail/?view=cm&fs=1&to=" +
+          encodeURIComponent(recipient) + "&su=" + su + "&body=" + body;
+        window.open(gmailUrl, "_blank", "noopener");
+        closeEmailModal();
+      }
+      return outcome;
+    });
+  }
+
+  if(emailBtn){
+    emailBtn.addEventListener("click", openEmailModal);
+    emailCancel.addEventListener("click", closeEmailModal);
+    emailBackdrop.addEventListener("click", (e)=>{ if(e.target === emailBackdrop) closeEmailModal(); });
+    emailSend.addEventListener("click", sendEmailFlow);
+    emailInput.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){ e.preventDefault(); sendEmailFlow(); }
+      else if(e.key === "Escape"){ closeEmailModal(); }
+    });
+  }
 })();
 </script>
